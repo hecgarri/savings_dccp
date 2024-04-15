@@ -1,0 +1,393 @@
+---
+title: "Resultados Mes 30"
+subtitle: "Nueva metodología de Ahorro en Convenio Marco"
+author: "Dirección ChileCompra"
+date: "`r Sys.Date()`"
+output: beamer_presentation
+header-includes:
+  - \usepackage{framed,color}
+  - \pgfdeclareimage[height=1cm, width=2.5cm]{logo}{ChileCompra.png}
+  - \logo{\pgfuseimage{logo}}
+  - \usepackage{wrapfig}
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{threeparttable}
+  - \usepackage{threeparttablex}
+  - \usepackage[normalem]{ulem}
+  - \usepackage{makecell}
+  - \usepackage{xcolor}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(kableExtra)
+library(gridExtra)
+
+report_date <- as.Date('2024-02-01')
+                       
+```
+
+```{r}
+
+myconn <- RODBC::odbcConnect("DW_new", uid="datawarehouse" , pwd="datawarehouse")
+myconnDW <- RODBC::odbcConnect("Estudios DW", uid="datawarehouse" , pwd="datawarehouse")
+
+tipo_de_cambio <- RODBC::sqlQuery(myconn,
+"SELECT 
+	moneda.YEAR,
+	moneda.MONTH,
+	moneda.VMCLP AS tipo_de_cambio
+FROM DPA..paridadmoneda as moneda
+WHERE moneda.MONEDA = 'USD'
+")
+
+#monthly_savings  <- readRDS('sept_savings.rds')
+#ammount_cm_sep <- readRDS('sept_ammounts.rds')
+amount_cm_all <- data.frame('convenio' = c('Aseo','Computadores','Escritorio RM','Ferreteria',
+                                            'Aseo','Computadores','Escritorio RM','Ferreteria',
+                                            'Aseo','Computadores','Escritorio RM','Ferreteria',
+                                            'Aseo','Computadores','Escritorio RM','Ferreteria',
+                                            'Aseo','Computadores','Escritorio RM','Ferreteria','Alimentos RM',
+                                            'Aseo','Computadores','Escritorio RM','Ferreteria','Alimentos RM',
+                                            'Aseo','Computadores','Escritorio RM','Ferreteria','Alimentos RM',
+                                            'Aseo','Computadores','Escritorio RM','Ferreteria','Alimentos RM'
+                                                  ),
+                             'fecha'    = c('2021-01-01','2021-01-01','2021-01-01','2021-01-01',
+                                            '2021-02-01','2021-02-01','2021-02-01','2021-02-01',
+                                            '2021-03-01','2021-03-01','2021-03-01','2021-03-01',
+                                            '2021-04-01','2021-04-01','2021-04-01','2021-04-01',
+                                            '2021-05-01','2021-05-01','2021-05-01','2021-05-01','2021-05-01',
+                                            '2021-06-01','2021-06-01','2021-06-01','2021-06-01','2021-06-01',
+                                            '2021-07-01','2021-07-01','2021-07-01','2021-07-01','2021-07-01',
+                                            '2021-08-01','2021-08-01','2021-08-01','2021-08-01','2021-08-01'
+                                            ),
+                             'monto_transado' = c(3119729849,511545763,1293700,885590581,
+                                                  3886896310,160607732,26956554,1555199796,
+                                                  4093939255,1015621620,207864292,2001448216,
+                                                  3550059023,923592698,298274382,1731353295,
+                                                  2714789511,991926448,204106921,1450438381,1995423183,
+                                                  3186781068,964636755,246592497,1348751547,2959563652,
+                                                  3472976008,984311899,304580158,1427097640,3388131217,
+                                                  2721543433,1143558170,197346617,1586906247,2758226033
+                                                  )
+                                   )  
+
+total_amount_cm_sep <- 17668168263 # total transado en los 5 convenios (todas las regiones)
+
+# cargamos informacion historica
+source('C:/o/OneDrive - DCCP/Traspaso/2. Cálculo de Ahorro/src/monthly report/report_month.R')
+
+rm(list=c("Ahorro","dipres_file","summary_table"))
+
+```
+
+## Contenido
+
+-   Resultados de `r paste0(month(report_date, label = TRUE, abbr = FALSE),' ',year(report_date))`
+
+\vspace{0.25cm}
+
+-   Comparación con meses previos
+
+## Resultados del mes
+
+```{r}
+
+comma <- function(x,y) {format(x, digits = y, decimal.mark = ',', big.mark = '.', scientific = FALSE)}
+format_number <- function(x, digit,is_percent = FALSE) {
+  x_new = format(x, digits = digit, big.mark = '.', decimal.mark = ',', scientific = FALSE)
+
+  if (is_percent == FALSE) {
+    x_new = paste0(x_new)
+  } else {
+    x_new = paste0(x_new,'%')
+  }
+  return(x_new)
+}
+
+
+# total amount cm contains the backup of the transaction 
+amount_cm_all <- total_amount_cm
+
+# tabla resumen
+summary_table <- merge(monthly_savings %>%
+                         filter(floor_date(fecha,'month') <= report_date) %>%
+                         group_by(convenio,fecha = floor_date(fecha,'month')) %>%
+                         summarise(ahorro_promedio_formated = paste0(comma(weighted.mean(ahorro_item,monto_total_item,na.rm = TRUE)*
+                                                                    100,3),'%'),
+                                   ahorro_promedio = weighted.mean(ahorro_item,monto_total_item,na.rm = TRUE),
+                                   productos = n_distinct(id_producto),
+                                   total_ahorro = sum(monto_ahorro_item,na.rm = TRUE),
+                                   total_monitoreado = sum(monto_total_item)),
+                       total_amount_cm, #%>% select(-tipo_de_cambio),
+                       by = c('fecha','convenio'),
+                       all.x = TRUE)
+
+
+summary_table$datekey <- stringr::str_remove_all(summary_table$fecha,"-")
+summary_table$cobertura <- summary_table$total_monitoreado / summary_table$monto_transado
+
+# cargamos los datos resumen en el servidor de estudios (202)
+RODBC::sqlQuery(myconnDW,("if OBJECT_ID('[Estudios].[dbo].[ahorro_mensual_cm]') is not null drop table [Estudios].[dbo].[ahorro_mensual_cm]"))
+
+RODBC::sqlSave(myconnDW,
+                 dat = summary_table %>% select(datekey,convenio,total_monitoreado,monto_transado,cobertura,total_ahorro,ahorro_promedio),
+                 tablename = "ahorro_mensual_cm",
+                 rownames = FALSE,
+                 fast = TRUE,
+                 append = TRUE
+  )
+
+amount_cm_all$fecha <- as.Date(amount_cm_all$fecha)
+
+# juntamos los datos de ahorro
+savings <- bind_rows(savings_all %>% group_by(convenio = Convenio,fecha) %>% 
+                       summarise(total_monitoreado = sum(MontoTotal_Item)),
+                     summary_table %>% select(convenio,fecha,total_monitoreado))
+
+savings$convenio[savings$convenio=='Alimentos']  <- 'Alimentos RM'
+savings$convenio[savings$convenio=='Escritorio'] <- 'Escritorio RM'
+
+#ammount_cm <- bind_rows(amount_cm_all,total_amount_cm)
+
+cobertura_hist <- data.frame('fecha' = c('2021-01-01',
+                                         '2021-02-01',
+                                         '2021-03-01',
+                                         '2021-04-01',
+                                         '2021-05-01',
+                                         '2021-06-01',
+                                         '2021-07-01',
+                                         '2021-08-01',
+                                         '2021-09-01',
+                                         '2021-10-01',
+                                         '2021-11-01',
+                                         '2021-12-01'
+                                       ),
+                           'cobertura' = c(0.309,
+                                            0.254,
+                                            0.224,
+                                            0.296,
+                                            0.300,
+                                            0.289,
+                                            0.290,
+                                            0.566,
+                                            0.542,
+                                            0.661,
+                                            0.675,
+                                            0.629
+                                        )
+                           )
+
+cobertura_hist$fecha <- as.Date(cobertura_hist$fecha)
+
+# cobertura
+cobertura <- merge(savings %>% filter(fecha <= report_date),
+                   total_amount_cm,
+                    by = c('fecha','convenio'),
+                    all.x = TRUE)
+
+# cobertura general
+serie_cobertura <- bind_rows(
+  cobertura_hist,
+  cobertura %>% 
+    filter(!is.na(monto_transado)) %>% 
+    group_by(fecha) %>% 
+    summarise(cobertura = sum(total_monitoreado)/sum(monto_transado))
+)
+
+```
+
+El ahorro total del mes asciende a: **\$`r monthly_savings %>% filter(floor_date(fecha,'month') == report_date) %>% summarise(total_ahorro = format_number(sum(monto_ahorro_item, na.rm = TRUE)/1000000, digit = 1,is_percent = FALSE))` millones de pesos** (USD `r comma(monthly_savings %>% filter(floor_date(fecha,'month') == report_date) %>% summarise(total_ahorro = sum(monto_ahorro_item_usd, na.rm=TRUE))/1000000,2)` MM)
+
+```{r, echo=FALSE,message=FALSE,warning=FALSE}
+
+# total transado 5 convenios monitoreados (todas sus transacciones)
+total_transact_1 <- total_amount_cm  %>%  
+filter(fecha==report_date) %>%
+summarise(monto_transado = sum(monto_transado)/1000000)
+
+# tabla final
+kable(
+  summary_table %>%
+    filter(fecha == report_date) %>%
+    mutate(
+      ahorro_promedio = paste0(comma(ahorro_promedio*100,2),'%'),
+      cobertura_monto = paste0(comma(total_monitoreado / monto_transado * 100,3),'%')) %>%
+    select(convenio,productos,ahorro_promedio,total_ahorro,cobertura_monto) %>%
+    arrange(desc(total_ahorro)),
+  "latex",
+  col.names = c("Convenio",'Prod.Monitoreados',"Ahorro Promedio(%)","Ahorro ($)",'Cobertura*'),
+  format.args = list(decimal.mark = ",", big.mark = "."),
+  align = 'lcccc',
+  #digits = c(0,1),
+  booktabs = T,
+  linesep = ""
+) %>%
+  kable_styling(latex_options = "scale_down") %>%
+  row_spec(0, bold = T) %>%
+  footnote(general_title = '*la cobertura para Alimentos, Escritorio y Aseo considera solo montos de la RM.',
+           fixed_small_size = TRUE)
+
+# Todos los convenios de productos operativos en magento suman USD `r format_number(sum(total_transact_2$monto_transado)/tipo_de_cambio$tipo_de_cambio[tipo_de_cambio$YEAR==2021 & tipo_de_cambio$MONTH==month(report_date)], digit = 3, is_percent = FALSE)` MM
+
+```
+
+\vspace{0.5cm}
+
+\footnotesize
+
+\textcolor{blue}{Total transado del mes} = $`r format_number(sum(total_transact_1$monto_transado), digit = 1, is_percent=FALSE)`    millones de pesos (USD`r format_number(sum(total_transact_1$monto_transado)/tipo_de_cambio$tipo_de_cambio[tipo_de_cambio$YEAR==year(report_date) & tipo_de_cambio$MONTH==month(report_date)],digit = 3, is_percent = FALSE)` MM)
+
+\tiny
+
+\*Considera todas las transacciones de los 8 convenios monitoreados. \center \footnotesize \textcolor{blue}{Cobertura agregada del mes} = `r format_number(serie_cobertura$cobertura[serie_cobertura$fecha==report_date]*100, digit = 3, is_percent = TRUE)`
+
+## Comparación con meses previos
+
+### Ahorro
+
+\footnotesize
+
+```{r, out.height = '65%', out.width = '98%'}
+
+# serie ahorro del 2021
+serie_ahorro_hist <- data.frame('fecha' = seq.Date(from =as.Date('2021-01-01'),to = as.Date('2021-12-01'),by = 'month'),
+                                'ahorro' = c(693218162,598404981,1351910726,732402928,620070865,1261826233,994416331,1628662731,
+                                             2936421295,3013025254,3601246459,3144602432)
+                                )
+# serie ahorro nueva metodologia desde el 2022                              
+serie_ahorro_new <- summary_table %>% group_by(fecha) %>% summarise(ahorro = sum(total_ahorro))
+
+# unimos y creamos la serie completa 2021 a la fecha
+serie_ahorro <- bind_rows(serie_ahorro_hist,serie_ahorro_new)
+
+serie_ahorro$fecha <- as.Date(serie_ahorro$fecha)
+
+serie_ahorro %>%
+  mutate(metod = ifelse(fecha <= '2021-07-01','Antigua','Nueva')) %>%
+  ggplot(aes(x = fecha, y = ahorro, fill = metod)) +
+  geom_bar(stat = 'identity') +
+  geom_text(aes(label = paste0(format_number(ahorro/1000000, digit = 1, is_percent = FALSE),'MM')
+              ), vjust = -0.4, color = 'black', size = 4) +
+  labs(x = '', y = '', fill = 'Metodología',title = 'Serie mensual de Ahorro ($)') +
+  scale_x_date(
+    date_breaks = '3 month',
+    date_labels = "%b%y") +
+  theme(axis.text.y = element_blank(),
+        axis.text.x = element_text(size = 12),
+        axis.ticks = element_blank(),
+        legend.position = c(0.1,0.8)
+        ) 
+
+
+
+```
+
+## Comparación con meses previos
+
+### Cobertura
+
+\footnotesize
+
+```{r, out.height = '60%', out.width = '97%'}
+serie_cobertura %>%
+  mutate(metod = ifelse(fecha <= '2021-07-01','Antigua','Nueva')) %>%
+  ggplot(aes(x = fecha, y = cobertura)) +
+  geom_line() +
+  geom_point(aes(color = metod),size = 3) +
+  geom_text(aes(label = format_number(cobertura*100, digit = 3, is_percent = TRUE)), 
+            vjust = -0.6, color = 'black', size = 4) +
+  labs(x = '', y = '', title = 'Serie mensual de cobertura (%)') +
+  scale_x_date(
+    date_breaks = '3 month',
+    date_labels = "%b%y") +
+  theme(axis.text.y = element_blank(),
+        axis.text.x = element_text(size = 12),
+        axis.ticks = element_blank(),
+        legend.position = c(0.1,0.8)
+        ) 
+```
+
+## Notas
+
++ **Combustibles**: Estamos a la espera de la información proveniente de uno de los proveedores del convenio. Esta información se requiere para calcular el ahorro.
++ **Gas**: Debido a la no disponibilidad de la API de la Comisión Nacional de Energía (CNE) se estuvo sin información durante 3 meses. En ese periodo se utilizó la información histórica mediante un modelo ARIMA para simular el precio para cada cilindro en cada una de las regiones disponibles. Con estos datos simulados se calcula el ahorro del convenio.
+
+
+```{r sobreprecio}
+# 
+# message('=======================')
+# message('Outlier de desahorro')
+# message('=======================')
+# outlier_overpriced <- monthly_savings %>% 
+#   filter(#ahorro_item < 0 & 
+#          convenio == 'Alimentos RM' & year(fecha) == year(report_date) & month(fecha) == month(report_date)) %>% 
+#   group_by(id_producto,producto,convenio) %>% 
+#   summarise(
+#     'precio minimo transado' = min(precio_unitario),
+#     'precio maximo transado' = max(precio_unitario),
+#     'precio capturado promedio' = mean(precio_capturado_prom),
+#     'ahorro promedio' = weighted.mean(ahorro_item,monto_total_item),
+#     'Monto Transado' = sum(monto_total_item)) %>% 
+#   arrange(`ahorro promedio`)
+# 
+# 
+# lista_overpriced <- list('productos' = outlier_overpriced,
+#                          'cotizaciones' = market_prices %>% 
+#                            filter(id_producto %in% outlier_overpriced$id_producto) %>%
+#                            arrange(producto)
+#                            )
+#   
+# writexl::write_xlsx(lista_overpriced,paste0('C:/O/OneDrive - DCCP/Github/eficiencia_nuevo_modelo_cm/ahorro/outputs/savings oficial/outlier/sobreprecio_',import_date_numeric,'.xlsx'))
+
+```
+
+
+
+```{r}
+## Comparación con meses previos
+
+### Principales resultados
+# 
+# \footnotesize
+# 
+# 1. 
+# 2. 
+# 3. 
+# 
+# \vspace{0.2cm}
+# \center
+# kable( 
+#   total_amount_cm %>%
+#     filter(fecha %in% c(as.Date('2021-11-01'),as.Date('2021-12-01'))) %>%
+#     select(fecha,convenio,monto_transado) %>%
+#     mutate(monto_transado = monto_transado/1000000) %>%
+#     tidyr::pivot_wider(names_from = fecha, values_from = monto_transado) %>%
+#     select(convenio,`2021-11-01`,`2021-12-01`),
+#   "latex",
+#   col.names = c("Convenio","Octubre","Noviembre"),
+#   format.args = list(decimal.mark = ",", big.mark = "."),
+#   digits = 0,
+#   align = 'lcc',
+#   booktabs = T,
+#   linesep = ""
+# ) %>%
+#   #kable_styling(latex_options = "scale_down")   
+#   row_spec(1,color = 'blue')
+#     
+  
+  # total_ammount_cm %>%
+  #   select(fecha,convenio,total_transado) %>%
+  #   group_by(fecha) %>%
+  #   summarise(total_transado = sum(total_transado))
+
+```
