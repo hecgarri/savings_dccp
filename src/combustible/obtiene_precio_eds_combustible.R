@@ -4,8 +4,8 @@ library(dplyr)
 library(ggplot2)
 library(lubridate)
 
-setwd('C:/o/OneDrive - DCCP/Traspaso/2. Cálculo de Ahorro')
-myconn <- RODBC::odbcConnect("DW_new", uid="datawarehouse" , pwd="datawarehouse")
+setwd('C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro')
+myconn <- RODBC::odbcConnect("dw", uid="datawarehouse" , pwd="datawarehouse")
 
 # fecha de calculo de los precios 
 fecha <- '20230901'
