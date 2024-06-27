@@ -7,10 +7,13 @@ library(lubridate)
 library(stringr)
 library(progress)
 library(ggplot2)
+library(DBI)
+library(RODBC)
 
 
 # directorios
-setwd('C:/O/OneDrive - DCCP/Github/eficiencia_nuevo_modelo_cm')
+#setwd('C:/O/OneDrive - DCCP/Github/eficiencia_nuevo_modelo_cm')
+setwd('C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro/savings_dccp/')
 
 format_number <- function(x, digit,is_percent = FALSE) {
   x_new = format(x, digits = digit, big.mark = '.', decimal.mark = ',', scientific = FALSE)
@@ -28,7 +31,7 @@ format_number <- function(x, digit,is_percent = FALSE) {
 
 # fecha de ejecucion
 #today <- Sys.Date()
-today         <- as.Date('2023-10-09') # fecha debe ser la de un lunes
+today         <- as.Date('2024-03-4') # fecha debe ser la de un lunes
 
 # generamos una medida de las diferencias de precios por proveedor
 # este es un proceso iterativo comenzando siempre desde 0.5 + y -
@@ -40,15 +43,15 @@ lim_sup <-  0.6  # Limite de ahorro final
 
 # --------- processing market prices --------- #
 
-source('./savings_cm/source code/data_processing - test.R')
+source('./src/main/2.data_processing.R')
 
 # -------- extracting cm prices -------------- #
 
-source('./savings_cm/source code/extract_weekly.R')
+source('./src/main/3.extract_weekly.R')
 
 # -------- getting savings ------------------- #
 
-source('./savings_cm/source code/get_savings.R')
+source('./src/main/4.get_savings.R')
 
 # ------------- tablas de resultado ---------- #
 
@@ -65,6 +68,7 @@ mutate(convenio = case_when(id_licitacion == '2239-7-LR17'  ~ 'Alimentos RM',
                             id_licitacion == '2239-17-LR22' ~ 'Computadores',
                             id_licitacion == '2239-2-LR18'  ~ 'Ferreteria',
                             id_licitacion == '2239-13-LR21' ~ 'Insumos Salud',
+                            id_licitacion == '2239-13-LR23' ~ 'Ferretería',
                             TRUE ~ 'Otros')) %>%
   select(IDProductoCM,
          id_licitacion,

@@ -4,7 +4,7 @@ library(dplyr)
 library(lubridate)
 library(ggplot2)
 
-setwd('C:/o/OneDrive - DCCP/Traspaso/2. Cálculo de Ahorro')
+#setwd('C:/o/OneDrive - DCCP/Traspaso/2. Cálculo de Ahorro')
 
 # fecha de calculo
 anio_ahorro <- 2023

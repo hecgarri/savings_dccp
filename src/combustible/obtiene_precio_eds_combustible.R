@@ -3,6 +3,7 @@ rm(list=ls())
 library(dplyr)
 library(ggplot2)
 library(lubridate)
+library(tidyr)
 
 setwd('C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro')
 myconn <- RODBC::odbcConnect("dw", uid="datawarehouse" , pwd="datawarehouse")
@@ -18,6 +19,35 @@ precio_diesel <- RODBC::sqlQuery(myconn,"SELECT * FROM [Estudios].[dbo].[DieselH
 
 names(precio_97)[names(precio_97) == 'Tipo']   <- 'tipo'
 precio_por_estacion <- bind_rows(precio_93,precio_95,precio_97,precio_diesel)
+
+# Esta sección es nueva y busca darle una estructura de panel a los datos de bencinas =====================
+# porque de lo contrario, al momento de realzar el merge con los datos de proveedores
+# se genera una brecha importante que puede afectar el cálculo. Fecha comentario: 17 de junio de 2024
+
+
+fill_missing <- function(df, start_date,  end_date){
+  id <- unique(df$id)
+  dates <- data.frame(
+    fecha = seq(as.Date(start_date), as.Date(end_date), by = "day")
+  )
+  
+  fechas_completas <- expand.grid(fecha_inicio = dates$fecha, id  = id)
+  
+  df$fecha_inicio <- as.Date(df$fecha_inicio)
+  
+  # Unir las tablas y rellenar los precios
+  precio_por_estacion <- fechas_completas %>%
+    left_join(precio_por_estacion, by = c("fecha_inicio", "id")) %>%
+    group_by(id) %>%
+    arrange(fecha_inicio) %>%
+    fill(precio, .direction = "down") %>%
+    ungroup()
+  
+  return(precio_por_estacion)
+}
+
+precio_93 <- fill_missing(precio_93,start_date = '20240301', end_date = '20240531')
+
 precio_por_estacion <- precio_por_estacion %>% mutate(codigo_producto = case_when(tipo == 'Bencina93' ~ 93,
                                                                                   tipo == 'Bencina95' ~ 95,
                                                                                   tipo == 'Bencina97' ~ 97,
@@ -29,8 +59,9 @@ precio_por_estacion <- precio_por_estacion %>% mutate(codigo_producto = case_whe
 precio_por_estacion <- precio_por_estacion[(precio_por_estacion$precio > 200 & precio_por_estacion$precio < 2000),]
 
 
+
 # diccionario de estaciones de servicio
-estaciones <- readxl::read_xlsx('./data/combustible/Diccionario Estaciones de Servicio.xlsx')
+#estaciones <- readxl::read_xlsx('./data/combustible/Diccionario Estaciones de Servicio.xlsx')
 
 # ejecutamos el archivo que procesa los datos recibidos por parte de los proveedores
 source('./src/procesa_datos_combustible.R')

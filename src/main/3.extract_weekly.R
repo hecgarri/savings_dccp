@@ -5,8 +5,30 @@ message('----------------------------------')
 message(' 3) Comienza la extraccion de transacciones en tienda')
 message('Cargando..........')
 
+establecer_conexion <- function(opcion) {
+  switch(opcion,
+         "dw" = dbConnect(odbc::odbc(), 
+                          Driver = "ODBC Driver 17 for SQL Server", 
+                          Server = "10.34.71.202", 
+                          UID = "datawarehouse", 
+                          PWD = "datawarehouse"),
+         "aq" = dbConnect(odbc::odbc(), 
+                          Driver = "ODBC Driver 17 for SQL Server", 
+                          Server = "10.34.71.146\\AQUILES_CONSULTA", 
+                          UID = "datawarehouse", 
+                          PWD = "datawarehouse"),
+         # Agregar mÃ¡s casos segÃºn sea necesario
+         stop("Opción de conexión no válida")
+  )
+}
+
+# FunciÃ³n para cerrar conexiÃ³n
+cerrar_conexion <- function(con) {
+  dbDisconnect(con)
+}
+
 # conexiones
-myconnAQ <- RODBC::odbcConnect("AQ", uid="datawarehouse" , pwd="datawarehouse")
+myconnAQ <- establecer_conexion("aq")
 
 # parametros
 if (is_final_week == 1) {
@@ -128,7 +150,8 @@ WHERE
                                      '2239-7-LR17',  -- Alim
                                      '2239-13-LR21', -- Insu
                                      '2239-5-LR19',  -- Aseo v1
-                                     '2239-9-LR22'   -- Aseo v2
+                                     '2239-9-LR22',   -- Aseo v2
+                                     '2239-13-LR23'   -- Ferr v4
                                      )
                              
                              
@@ -136,7 +159,7 @@ WHERE
   sep=""
 )
 
-transaction <- RODBC::sqlQuery(myconnAQ,transaction_qry)
+transaction <- dbGetQuery(myconnAQ,transaction_qry)
 
 message('=============================')
 message(paste0('====> transacciones extraidas entre el ',extract_date_ini,' y el ',extract_date_fin))
@@ -150,7 +173,7 @@ transaction <- transaction %>%
         (id_licitacion == '2239-9-LR22' & str_detect(NombreProducto,' RM')) |
         (id_licitacion == '2239-17-LR20' & str_detect(NombreProducto,'MACROZONA RM')) |
         (id_licitacion == '2239-13-LR21' & str_detect(NombreProducto,'CENTRO')) |
-        (id_licitacion %in% c('2239-5-LR19','2239-20-LR20','2239-10-LR21','2239-17-LR22','2239-2-LR18')),
+        (id_licitacion %in% c('2239-5-LR19','2239-20-LR20','2239-10-LR21','2239-17-LR22','2239-2-LR18','2239-13-LR23')),
       1,0)
   )
 

@@ -11,7 +11,7 @@ message(' 1) Comienza el proceso de calculo de ahorro semanal')
 # no importa el día en que se procese de esa semana, siempre extrae los precios y archivo de
 # la semana anterior
 
-download_day  <- 1 # parametro que cambia de acuerdo con la fecha de carga de los precios (lunes actualmente)
+download_day  <- 0 # parametro que cambia de acuerdo con la fecha de carga de los precios (lunes actualmente)
 week_last_day <- ceiling_date(today,'weeks')
 
 import_date     <- floor_date(today,'weeks', week_start = 1) - days(download_day)
@@ -39,21 +39,21 @@ import_date_numeric <- paste0(year(import_date),
                               ifelse(day(import_date)<10,paste0(0,day(import_date)),day(import_date)))
 
 # importamos el archivo
-files      <- list.files(path="./savings_cm/input")
+files      <- list.files(path="./data/shopeo")
 main_files <- files[str_detect(str_to_lower(files),"reportepreciossemanal") & 
-                    str_detect(str_to_lower(files),paste0(format(import_date,'%d-%m%-%Y'),'.xlsx')) & 
+                    str_detect(str_to_lower(files),paste0(format(import_date,'%d-%m%-%Y'))) & 
                     !str_detect(str_to_lower(files),"~")]
-market_prices <- readxl::read_xlsx(paste0('./savings_cm/input/',main_files))
+market_prices <- readxl::read_xlsx(paste0('./data/shopeo/',main_files))
 message(paste0('====> se importa el archivo ',main_files,' actualizado el ',format(import_date,'%d-%m%-%Y')),
         ' y procesado el ',format(today,'%d-%m%-%Y'))
 
 # importamos las tiendas
-tiendas <- readxl::read_xlsx('./savings_cm/input/tiendas.xlsx')
-message('====> se importa el archivo Tiendas.xlsx')
-market_prices <- merge(market_prices,# %>% select(-NombreTienda),
-                       tiendas,
-                       by = 'IdTienda',
-                       all.x =  TRUE)
+# tiendas <- readxl::read_xlsx('./savings_cm/input/tiendas.xlsx')
+# message('====> se importa el archivo Tiendas.xlsx')
+# market_prices <- merge(market_prices,# %>% select(-NombreTienda),
+#                        tiendas,
+#                        by = 'IdTienda',
+#                        all.x =  TRUE)
 
 
 # modificamos el nombre de las columnas
@@ -137,7 +137,7 @@ if (elimina_primera == TRUE) {
     distinct(id_producto,id_tienda,url,.keep_all = TRUE)  # eliminamos la ultima cotizacion capturada
 }
 
-message(paste0('====> se eliminan ',nrow(market_prices_old) - nrow(market_prices),' capturas de precio tomamos en una misma fecha'))
+message(paste0('====> se eliminan ',nrow(market_prices_old) - nrow(market_prices),' capturas de precio tomados en una misma fecha'))
 rm(market_prices_old)
 
 # empresas no validas
@@ -197,12 +197,14 @@ for (item in sumar_disco) {
   market_prices$precio_capturado[market_prices$id_producto==item] <- precio_old + precio_ram
 }
 
+if (any(market_prices$id_producto==3)){
+  for (item in sumar_ram_8) {
+    precio_old = market_prices$precio_capturado[market_prices$id_producto==item]
+    precio_ram = market_prices$precio_capturado[market_prices$id_producto==3]
+    market_prices$precio_capturado[market_prices$id_producto==item] <- precio_old + precio_ram
+  }  
+} else {message("No se encontraron productos equivalentes para realizar el reemplazo")}
 
-for (item in sumar_ram_8) {
-  precio_old = market_prices$precio_capturado[market_prices$id_producto==item]
-  precio_ram = market_prices$precio_capturado[market_prices$id_producto==3]
-  market_prices$precio_capturado[market_prices$id_producto==item] <- precio_old + precio_ram
-}
 
   
 market_prices <- market_prices %>%
@@ -212,7 +214,7 @@ market_prices <- market_prices %>%
 
 price_outlier <- market_prices$id_producto[market_prices$revisar == 1]
 price_outlier_tab <- market_prices[market_prices$id_producto %in% price_outlier,]
-writexl::write_xlsx(price_outlier_tab,paste0('./savings_cm/output/validate/capturas_revision_',import_date_numeric,'.xlsx'))
+writexl::write_xlsx(price_outlier_tab,paste0('./output/validate/capturas_revision_',import_date_numeric,'.xlsx'))
 
 market_prices_fin <- market_prices[!market_prices$id_producto %in% price_outlier,]
 message(paste0('====> no se consideran ',nrow(market_prices) - nrow(market_prices_fin),' capturas de precio por posible error'))
