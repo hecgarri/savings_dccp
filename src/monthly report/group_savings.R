@@ -19,6 +19,7 @@ monthly_savings_ini <- data.frame()
 for (file in rest_files) {
   temp_data <- readxl::read_xlsx(paste0("./output/weekly savings/",file))
   temp_data$FechaOC <- as.Date(temp_data$FechaOC)
+  temp_data$es_80p_gen <- as.numeric(temp_data$es_80p_gen)
   monthly_savings_ini   <- rbind(monthly_savings_ini,temp_data)
 } 
 

@@ -115,17 +115,17 @@ SELECT
     TCM.Período,
     TCM.IdConvenioMarco,
     TCM.NombreCM,
-    TCM.IdProductoCM,
+    TCM.IdProductoCM as [id_producto],
     TCM.MontoCLPsinIVA,
     TCM.Suma_Acumulada,
     TCM.Suma_Total,
 	TCM.Pct,
     TCM.Pct_Acumulado,
     CASE 
-        WHEN TCM.Pct_Acumulado <= 0.80 THEN 'Top 80%'
-		WHEN TCM.Suma_Acumulada - TCM.MontoCLPsinIVA <= 0.80 * TCM.Suma_Total THEN 'Top 80%'
-        ELSE 'Otros'
-    END AS Categoria
+        WHEN TCM.Pct_Acumulado <= 0.80 THEN 1
+		    WHEN TCM.Suma_Acumulada - TCM.MontoCLPsinIVA <= 0.80 * TCM.Suma_Total THEN 1
+        ELSE 0
+    END AS es_80p_gen
 FROM TotalCM AS TCM
 ORDER BY 
     TCM.IdConvenioMarco ASC,

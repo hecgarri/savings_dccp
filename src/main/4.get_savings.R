@@ -2,7 +2,10 @@ message('===========================')
 message('unimos datos transaccionales y precios de referencia')
 
 #cargamos productos 80-20 (archivo general agrupa todas las actualizaciones)
-most_value_prod <- readxl::read_xlsx('./ahorro/productos 80-20/productos_80_20_general.xlsx')
+#Toma month_fist_day del script 2.data_processing
+#Los archivos 80-20 se construyen con la rutina 0.es_80p_gen.R
+most_value_prod <- readxl::read_xlsx(paste0('./data/productos 80-20/'
+                                            ,month_first_day,' productos 80-20.xlsx'))
 
 # obtenemos el promedio por id
 avg_market_price <- market_prices %>% 
@@ -75,7 +78,7 @@ lista_overpriced <- list('productos' = outlier_overpriced,
                            arrange(producto)
 )
 
-writexl::write_xlsx(lista_overpriced,paste0('./savings_cm/output/overpriced/sobreprecio_',import_date_numeric,'.xlsx'))
+writexl::write_xlsx(lista_overpriced,paste0('./output/overpriced/sobreprecio_',import_date_numeric,'.xlsx'))
 
 lim_sup_rev <- 0.6
 message('=======================')
@@ -92,4 +95,4 @@ outlier_savings <- savings %>%
     'ahorro promedio' = weighted.mean(ahorro_item,MontoTotal_Item, na.rm = TRUE)) %>% 
   arrange(`ahorro promedio`)
 
-writexl::write_xlsx(outlier_savings,paste0('./savings_cm/output/overpriced/outlier_ahorro_',import_date_numeric,'.xlsx'))
+writexl::write_xlsx(outlier_savings,paste0('./output/overpriced/outlier_ahorro_',import_date_numeric,'.xlsx'))

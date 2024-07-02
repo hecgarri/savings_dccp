@@ -20,6 +20,10 @@ precio_diesel <- RODBC::sqlQuery(myconn,"SELECT * FROM [Estudios].[dbo].[DieselH
 names(precio_97)[names(precio_97) == 'Tipo']   <- 'tipo'
 precio_por_estacion <- bind_rows(precio_93,precio_95,precio_97,precio_diesel)
 
+
+#==========================================================================
+##==========================================================================
+###==========================================================================
 # Esta sección es nueva y busca darle una estructura de panel a los datos de bencinas =====================
 # porque de lo contrario, al momento de realzar el merge con los datos de proveedores
 # se genera una brecha importante que puede afectar el cálculo. Fecha comentario: 17 de junio de 2024
@@ -47,6 +51,10 @@ fill_missing <- function(df, start_date,  end_date){
 }
 
 precio_93 <- fill_missing(precio_93,start_date = '20240301', end_date = '20240531')
+
+#==========================================================================
+##==========================================================================
+###==========================================================================
 
 precio_por_estacion <- precio_por_estacion %>% mutate(codigo_producto = case_when(tipo == 'Bencina93' ~ 93,
                                                                                   tipo == 'Bencina95' ~ 95,

@@ -11,10 +11,10 @@ message(' 1) Comienza el proceso de calculo de ahorro semanal')
 # no importa el día en que se procese de esa semana, siempre extrae los precios y archivo de
 # la semana anterior
 
-download_day  <- 0 # parametro que cambia de acuerdo con la fecha de carga de los precios (lunes actualmente)
+download_day  <- 1 # parametro que cambia de acuerdo con la fecha de carga de los precios (lunes actualmente)
 week_last_day <- ceiling_date(today,'weeks')
 
-import_date     <- floor_date(today,'weeks', week_start = 1) - days(download_day)
+import_date <- floor_date(today,'weeks', week_start = 1) - days(download_day)
 month_first_day <- floor_date(import_date,'month')
 month_last_day  <- ceiling_date(import_date,'month') - days(1)
 
@@ -77,15 +77,15 @@ summary_market_prices <- market_prices %>%
   summarise(productos = n_distinct(id_producto), 
             n_precios = n()/productos)
 
-summary_market_prices
+print(summary_market_prices)
 
 # agregamos un case para la primera y ultima semana del mes
 # la idea es que no queden dias sueltos a inicio ni a fin de mes
 
 if (month(import_date) != month(import_date - days(7))) {
   # inicio de mes
-  days_left     <- days(import_date - month_first_day)
-  import_date   <- month_first_day
+  days_left <- days(import_date - month_first_day)
+  import_date <- month_first_day
   is_first_week <- 1
   
 } else {

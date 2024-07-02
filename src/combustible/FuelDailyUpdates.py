@@ -8,7 +8,7 @@ El objetivo de esta rutina es conectarse a la API de combustibles de la Comisió
 @author:hector.garrido
 Correo electrónico: hector.garrido@chilecompra.cl
 Fecha de creación: Miércoles 4 de noviembre de 2020
-Fecha de actualización: Miércoles 8 de mayo de 2024
+Fecha de actualización:         Miércoles 8 de mayo de 2024
 
 Funciones:
 - get_auth_token: genera el token mediante el método HTTP POST 

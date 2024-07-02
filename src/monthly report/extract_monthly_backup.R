@@ -1,5 +1,6 @@
 library(dplyr)
 library(stringr)
+library(lubridate)
 
 message('Importando resultados semanales y mensuales')
 message('Cargando ahorros.......')
@@ -33,6 +34,7 @@ total_amount_cm <- monthly_transaction %>%
                               id_licitacion == "2239-6-LR20" ~ "Combustible",
                               id_licitacion == "2239-7-LR17" ~ "Alimentos RM",
                               id_licitacion == "2239-13-LR21" ~ "Insumos Salud",
+                              id_licitacion == '2239-13-LR23' ~ 'Ferretería',
                               TRUE ~ 'Otro')) %>%
   #group_by(convenio,fecha = make_date(anio,mes,01)) %>%
   group_by(convenio,fecha = floor_date(FechaOC,'month')) %>%

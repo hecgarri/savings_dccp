@@ -9,7 +9,8 @@ library(ggplot2)
 # parametros
 
 #report_date <- as.Date() # fecha del reporte
-#floor_date(max(monthly_savings$FechaOC),'month')
+#report_date <- floor_date(max(monthly_savings$FechaOC),'month')
+report_date <- '2024-03-01'
 mes_completo  <- TRUE # TRUE si el mes esta cerrado
 genera_dipres <- FALSE # TRUE si queremos generar el archivos a la dipres
 
@@ -18,8 +19,8 @@ genera_dipres <- FALSE # TRUE si queremos generar el archivos a la dipres
 # ======================================================== #
 
 # directorio
-setwd('C:/o/OneDrive - DCCP/Traspaso/2. Cálculo de Ahorro')
-myconn <- RODBC::odbcConnect("DW_new", uid="datawarehouse" , pwd="datawarehouse")
+setwd('C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro/savings_dccp')
+myconn <- RODBC::odbcConnect("dw", uid="datawarehouse" , pwd="datawarehouse")
 
 savings_all <- readRDS("./data/ahorros_historicos.rds")
 message('1. Iniciamos consolidacion de los ahorros')
@@ -28,6 +29,15 @@ message('Cargando.......')
 
 # importamos datos de ahorro para combustibles
 source('./src/monthly report/group_savings.R')
+
+tipo_de_cambio <- sqlQuery(myconn, "
+                           SELECT 
+                          YEAR
+                          ,MONTH
+                          ,VMCLP [tipo_de_cambio]
+                          FROM [DPA].[dbo].[PARIDADMONEDA]
+                          WHERE MONEDA='USD'
+                           ")
 
 # agregamos el tipo de cambio para transformar montos
 monthly_savings <- merge(monthly_savings %>% mutate(Anio = year(FechaOC), Mes = month(FechaOC)),
@@ -73,10 +83,14 @@ writexl::write_xlsx(summary_table,'./output/tabla_mes_final.xlsx')
 message('===========================================')
 message('         tabla resumen del mes             ')
 message('===========================================')
-summary_table %>%
-  mutate(cobertura_monto = total_monitoreado / monto_transado * 100) %>%
-  select(convenio,ahorro_promedio,productos,total_ahorro,cobertura_monto) %>%
-  arrange(desc(total_ahorro))
+
+print(
+  summary_table %>%
+    mutate(cobertura_monto = total_monitoreado / monto_transado * 100) %>%
+    select(convenio,ahorro_promedio,productos,total_ahorro,cobertura_monto) %>%
+    arrange(desc(total_ahorro))  
+)
+
 
 # distribucion de ahorros por convenio
 monthly_savings %>%

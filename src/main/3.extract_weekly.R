@@ -22,7 +22,7 @@ establecer_conexion <- function(opcion) {
   )
 }
 
-# FunciÃ³n para cerrar conexiÃ³n
+# Función para cerrar conexión
 cerrar_conexion <- function(con) {
   dbDisconnect(con)
 }
