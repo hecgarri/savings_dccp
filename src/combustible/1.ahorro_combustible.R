@@ -11,7 +11,7 @@ anio_ahorro <- 2023
 mes_ahorro  <- 07
 fecha       <- paste0(anio_ahorro,ifelse(mes_ahorro<10,paste0(0,mes_ahorro),mes_ahorro),'01')
 
-source('./src/procesa_datos_combustible.R')
+source('./src/2.procesa_datos_combustible.R')
 
 tabla_precio_estacion <- readRDS(paste0('./data/combustible/precios por estacion/precios_por_estacion_',
                                         paste0(anio_ahorro,ifelse(mes_ahorro<10,paste0(0,mes_ahorro),mes_ahorro)),'.rds'))

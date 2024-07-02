@@ -5,19 +5,49 @@ library(ggplot2)
 library(lubridate)
 library(tidyr)
 
-setwd('C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro')
+setwd('C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro/savings_dccp')
 myconn <- RODBC::odbcConnect("dw", uid="datawarehouse" , pwd="datawarehouse")
 
 # fecha de calculo de los precios 
-fecha <- '20230901'
+fecha <- '20240301'
+anio_ahorro <- substr(fecha,1,4)
+mes_ahorro <- as.numeric(substr(fecha,5,6))
 
 # datos de precios por estacion
-precio_93 <- RODBC::sqlQuery(myconn,"SELECT * FROM [Estudios].[dbo].[Bencina93Hist]")
-precio_95 <- RODBC::sqlQuery(myconn,"SELECT * FROM [Estudios].[dbo].[Bencina95Hist]")
-precio_97 <- RODBC::sqlQuery(myconn,"SELECT * FROM [Estudios].[dbo].[Bencina97Hist]")
-precio_diesel <- RODBC::sqlQuery(myconn,"SELECT * FROM [Estudios].[dbo].[DieselHist]")
+precio_93 <- RODBC::sqlQuery(myconn,paste0("SELECT DISTINCT 
+                                    id
+                                    ,fecha_inicio
+                                    ,precio
+                                    from estudios.dbo.Bencina93Hist
+                                    where year(fecha_inicio)>=",anio_ahorro
+                                    ," and month(fecha_inicio)>=",mes_ahorro,"
+                             "))
+precio_95 <- RODBC::sqlQuery(myconn,paste0("SELECT DISTINCT 
+                                    id
+                                    ,fecha_inicio
+                                    ,precio
+                                    from estudios.dbo.Bencina95Hist
+                                    where year(fecha_inicio)>=",anio_ahorro
+                                    ," and month(fecha_inicio)>=",mes_ahorro,"
+                             "))
+precio_97 <- RODBC::sqlQuery(myconn,paste0("SELECT DISTINCT 
+                                    id
+                                    ,fecha_inicio
+                                    ,precio
+                                    from estudios.dbo.Bencina97Hist
+                                    where year(fecha_inicio)>=",anio_ahorro
+                                    ," and month(fecha_inicio)>=",mes_ahorro,"
+                             "))
+precio_diesel <- RODBC::sqlQuery(myconn,paste0("SELECT DISTINCT 
+                                    id
+                                    ,fecha_inicio
+                                    ,precio
+                                    from estudios.dbo.DieselHist
+                                    where year(fecha_inicio)>=",anio_ahorro
+                                    ," and month(fecha_inicio)>=",mes_ahorro,"
+                             "))
 
-names(precio_97)[names(precio_97) == 'Tipo']   <- 'tipo'
+#names(precio_97)[names(precio_97) == 'Tipo']   <- 'tipo'
 precio_por_estacion <- bind_rows(precio_93,precio_95,precio_97,precio_diesel)
 
 
@@ -29,28 +59,32 @@ precio_por_estacion <- bind_rows(precio_93,precio_95,precio_97,precio_diesel)
 # se genera una brecha importante que puede afectar el cálculo. Fecha comentario: 17 de junio de 2024
 
 
-fill_missing <- function(df, start_date,  end_date){
+fill_missing <- function(df, start_date, end_date){
   id <- unique(df$id)
+  
+  # Crear una secuencia de fechas desde start_date hasta end_date
   dates <- data.frame(
     fecha = seq(as.Date(start_date), as.Date(end_date), by = "day")
   )
   
-  fechas_completas <- expand.grid(fecha_inicio = dates$fecha, id  = id)
+  # Crear un data.frame con todas las combinaciones de fechas e IDs
+  fechas_completas <- expand.grid(fecha_inicio = dates$fecha, id = id)
   
+  # Asegurarse de que la columna fecha_inicio en df sea de tipo Date
   df$fecha_inicio <- as.Date(df$fecha_inicio)
   
   # Unir las tablas y rellenar los precios
   precio_por_estacion <- fechas_completas %>%
-    left_join(precio_por_estacion, by = c("fecha_inicio", "id")) %>%
+    left_join(df, by = c("fecha_inicio", "id")) %>%
+    arrange(id, fecha_inicio) %>%
     group_by(id) %>%
-    arrange(fecha_inicio) %>%
     fill(precio, .direction = "down") %>%
     ungroup()
   
   return(precio_por_estacion)
 }
 
-precio_93 <- fill_missing(precio_93,start_date = '20240301', end_date = '20240531')
+precio_93 <- fill_missing(precio_93,start_date = '2024-03-01', end_date = '2024-03-31')
 
 #==========================================================================
 ##==========================================================================
@@ -69,10 +103,10 @@ precio_por_estacion <- precio_por_estacion[(precio_por_estacion$precio > 200 & p
 
 
 # diccionario de estaciones de servicio
-#estaciones <- readxl::read_xlsx('./data/combustible/Diccionario Estaciones de Servicio.xlsx')
+estaciones <- readxl::read_xlsx('./data/combustible/Diccionario Estaciones de Servicio.xlsx')
 
 # ejecutamos el archivo que procesa los datos recibidos por parte de los proveedores
-source('./src/procesa_datos_combustible.R')
+source('./src/2.procesa_datos_combustible.R')
 
 # tabla con cobertura de eds 
 transacciones_final %>% 

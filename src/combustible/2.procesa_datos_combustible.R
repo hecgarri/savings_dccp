@@ -1,9 +1,9 @@
   # script que procesa datos de consumo de combustible
   
   # datos transaccionales
-  carpeta_copec <- list.files(path="C:/o/OneDrive - DCCP/Datos Prov Combustible/Copec")
-  carpeta_esmax <- list.files(path="C:/o/OneDrive - DCCP/Datos Prov Combustible/Esmax")
-  carpeta_enex  <- list.files(path="C:/o/OneDrive - DCCP/Datos Prov Combustible/Enex")
+  carpeta_copec <- list.files(path="C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro/savings_dccp/data/combustible/Copec")
+  carpeta_esmax <- list.files(path="C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro/savings_dccp/data/combustible/Esmax")
+  #carpeta_enex  <- list.files(path="C:/o/OneDrive - DCCP/Datos Prov Combustible/Enex")
   
   archivos_copec <- carpeta_copec[stringr::str_detect(stringr::str_to_lower(carpeta_copec),'copec') & (stringr::str_detect(stringr::str_to_lower(carpeta_copec),fecha))]
   archivos_esmax <- carpeta_esmax[stringr::str_detect(stringr::str_to_lower(carpeta_esmax),'esmax') & (stringr::str_detect(stringr::str_to_lower(carpeta_esmax),fecha))]
@@ -12,7 +12,7 @@
   transacciones_esmax <- data.frame()
   
   variables_necesarias <- c('id_estacion_proveedor','fecha','rut_organismo','codigo_producto','monto_pagado','litros')
-  dir_inputs <- "C:/o/OneDrive - DCCP/Datos Prov Combustible"
+  dir_inputs <- "C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro/savings_dccp/data/combustible"
 
 # ========================================================= #
 # copec
@@ -20,9 +20,9 @@
 for (i in 1:length(archivos_copec)) {
   temp_data <- readxl::read_xlsx(paste0(dir_inputs,"/Copec/",archivos_copec[i]))
   
-  names(temp_data)[(names(temp_data) == 'EdsSAP') | (names(temp_data) == 'Eds') | (names(temp_data)=='C?digo EDS') | (names(temp_data)=='COD_ES')]  <- 'id_estacion_proveedor'
-  names(temp_data)[(names(temp_data) == 'CodProdu') | (names(temp_data)=='C?d. Producto') | (names(temp_data)=='C?digo producto') | (names(temp_data)=='COD_PROD')] <- 'codigo_producto'
-  names(temp_data)[(names(temp_data) == 'MontoTrx') | (names(temp_data)=='Monto Transacci?n') | (names(temp_data)=='MONTO_TRN')] <- 'monto_pagado_sin_descuento'
+  names(temp_data)[(names(temp_data) == 'EdsSAP') | (names(temp_data) == 'Eds') | (names(temp_data)=='C?digo EDS') | (names(temp_data)=='COD_ES') | (names(temp_data))=='CODIGO EDS']  <- 'id_estacion_proveedor'
+  names(temp_data)[(names(temp_data) == 'CodProdu') | (names(temp_data)=='C?d. Producto') | (names(temp_data)=='C?digo producto') | (names(temp_data)=='COD_PROD') | (names(temp_data)=='CODIGO PRODU')] <- 'codigo_producto'
+  names(temp_data)[(names(temp_data) == 'MontoTrx') | (names(temp_data)=='Monto Transacci?n') | (names(temp_data)=='MONTO_TRN') | (names(temp_data)=='MONTO TRN')] <- 'monto_pagado_sin_descuento'
   names(temp_data)[(names(temp_data) == 'VolTrx') | (names(temp_data)=='Volumen Transacci?n') | (names(temp_data)=='VOLUMEN_TRN')] <- 'litros'
   names(temp_data)[(names(temp_data) == 'Rut') | (names(temp_data)=='RUT Cliente') | (names(temp_data)=='RUT_CLIENTE')] <- 'rut'
   names(temp_data)[(names(temp_data) == 'Monto Descuento') | (names(temp_data) == 'Descuento Transacci?n') | (names(temp_data) =='MONTO_DESC')] <- 'descuento_unidad'
