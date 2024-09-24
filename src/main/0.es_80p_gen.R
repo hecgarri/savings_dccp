@@ -67,7 +67,7 @@ con2 = establecer_conexion("aq") #Aquiles
 con3 = establecer_conexion("dw") #Datawarehouse
 
 grilla <- rbind(expand.grid(1:12,2023:2024))
-grilla <- grilla[1:18,]
+grilla <- grilla[19,]
 #grilla <- grilla[17,]
 
 

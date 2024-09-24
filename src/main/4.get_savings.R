@@ -4,6 +4,8 @@ message('unimos datos transaccionales y precios de referencia')
 #cargamos productos 80-20 (archivo general agrupa todas las actualizaciones)
 #Toma month_fist_day del script 2.data_processing
 #Los archivos 80-20 se construyen con la rutina 0.es_80p_gen.R
+
+month_first_day <- "2024-07-01"
 most_value_prod <- readxl::read_xlsx(paste0('./data/productos 80-20/'
                                             ,month_first_day,' productos 80-20.xlsx'))
 
@@ -28,7 +30,7 @@ savings2 <- savings_old %>%
     monto_ahorro_item = -1*(precio_unitario - precio_capturado_prom)*Cantidad_Item) 
 
 # agregamos info de los 80-20 por convenio
-savings <- merge(savings2 %>% select(-convenio),
+savings <- merge(savings2 ,
                  most_value_prod %>% select(id_producto,es_80p_gen),
                  by.x = 'IDProductoCM',
                  by.y = 'id_producto',

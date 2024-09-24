@@ -11,7 +11,7 @@
   transacciones_copec <- data.frame()
   transacciones_esmax <- data.frame()
   
-  variables_necesarias <- c('id_estacion_proveedor','fecha','rut_organismo','codigo_producto','monto_pagado','litros')
+  variables_necesarias <- c('id_estacion_proveedor','fecha','rut','codigo_producto','monto_pagado','litros')
   dir_inputs <- "C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro/savings_dccp/data/combustible"
 
 # ========================================================= #
@@ -23,10 +23,10 @@ for (i in 1:length(archivos_copec)) {
   names(temp_data)[(names(temp_data) == 'EdsSAP') | (names(temp_data) == 'Eds') | (names(temp_data)=='C?digo EDS') | (names(temp_data)=='COD_ES') | (names(temp_data))=='CODIGO EDS']  <- 'id_estacion_proveedor'
   names(temp_data)[(names(temp_data) == 'CodProdu') | (names(temp_data)=='C?d. Producto') | (names(temp_data)=='C?digo producto') | (names(temp_data)=='COD_PROD') | (names(temp_data)=='CODIGO PRODU')] <- 'codigo_producto'
   names(temp_data)[(names(temp_data) == 'MontoTrx') | (names(temp_data)=='Monto Transacci?n') | (names(temp_data)=='MONTO_TRN') | (names(temp_data)=='MONTO TRN')] <- 'monto_pagado_sin_descuento'
-  names(temp_data)[(names(temp_data) == 'VolTrx') | (names(temp_data)=='Volumen Transacci?n') | (names(temp_data)=='VOLUMEN_TRN')] <- 'litros'
-  names(temp_data)[(names(temp_data) == 'Rut') | (names(temp_data)=='RUT Cliente') | (names(temp_data)=='RUT_CLIENTE')] <- 'rut'
-  names(temp_data)[(names(temp_data) == 'Monto Descuento') | (names(temp_data) == 'Descuento Transacci?n') | (names(temp_data) =='MONTO_DESC')] <- 'descuento_unidad'
-  names(temp_data)[(names(temp_data) == 'Fecha') | (names(temp_data) == 'Fecha de transacci?n') | (names(temp_data)=='FECHA_TRN')] <- 'Fecha'
+  names(temp_data)[(names(temp_data) == 'VolTrx') | (names(temp_data)=='Volumen Transacci?n') | (names(temp_data)=='VOLUMEN_TRN') | (names(temp_data)=='VOLUMEN TRN')] <- 'litros'
+  names(temp_data)[(names(temp_data) == 'Rut') | (names(temp_data)=='RUT Cliente') | (names(temp_data)=='RUT_CLIENTE') | (names(temp_data)=='RUT CLIENTE')] <- 'rut'
+  names(temp_data)[(names(temp_data) == 'Monto Descuento') | (names(temp_data) == 'Descuento Transacci?n') | (names(temp_data) =='MONTO_DESC') | (names(temp_data) == 'MONTO DESCTO')] <- 'descuento_unidad'
+  names(temp_data)[(names(temp_data) == 'Fecha') | (names(temp_data) == 'Fecha de transacci?n') | (names(temp_data)=='FECHA_TRN') | (names(temp_data)=='FECHA TRN')] <- 'fecha'
   
   # aplicamos el descuento en el caso de copec
   temp_data$descuento_unidad <- as.numeric(temp_data$descuento_unidad)
@@ -35,37 +35,36 @@ for (i in 1:length(archivos_copec)) {
   
   # rut
   temp_data <- temp_data %>% mutate(rut_organismo = paste0(substr(rut,1,2),'.',substr(rut,3,5),'.',substr(rut,6,8)))
-  
+  print(table(temp_data$fecha))
   # fecha
   if (archivos_copec[i] == 'trans_copec_20201001.xlsx') {
-    temp_data$fecha <- lubridate::make_date(year = substr(temp_data$Fecha,1,4),
-                                            month = substr(temp_data$Fecha,5,6),
-                                            day = substr(temp_data$Fecha,7,8))
+    temp_data$fecha <- lubridate::make_date(year = substr(temp_data$fecha,1,4),
+                                            month = substr(temp_data$fecha,5,6),
+                                            day = substr(temp_data$fecha,7,8))
     
-  } else if (archivos_copec[i] == 'trans_copec_20201201.xlsx' | archivos_copec[i] == 'trans_copec_20210101.xlsx' | archivos_copec[i] == 'trans_copec_20230501.xlsx') {
-    temp_data$fecha <- as.Date.character(temp_data$Fecha, format = '%Y-%m-%d')
+  } else if  (archivos_copec[i] == 'trans_copec_20201201.xlsx' | archivos_copec[i] == 'trans_copec_20210101.xlsx' | archivos_copec[i] == 'trans_copec_20230501.xlsx') {
+    temp_data$fecha <- as.Date.character(temp_data$fecha, format = '%Y-%m-%d')
     
-  } else {
-    temp_data$fecha <- as.Date.character(temp_data$Fecha, format = '%d-%m-%Y')
-  }
-  
-  
+  } 
   transacciones_copec <- bind_rows(transacciones_copec,
                                    temp_data %>% select(all_of(variables_necesarias)))
 } 
 
+  
 # ========================================================= #
 # petrobras
 # ========================================================= #
 for (i in 1:length(archivos_esmax)) {
-  temp_data <- read.csv2(paste0(dir_inputs,"/Esmax/",archivos_esmax[i]))
-  
-  names(temp_data)[names(temp_data) == 'Cod..Platino' | (names(temp_data) == 'Cod.Platino')]    <- 'id_estacion_proveedor'
+  temp_data <- data.table::fread(paste0(dir_inputs,"/Esmax/",archivos_esmax[i]),sep = ";", encoding = 'UTF-8')
+
+  names(temp_data)[names(temp_data) == 'Cod..Platino' | (names(temp_data) == 'Cod.Platino') | (names(temp_data) == 'Cod. Platino')]    <- 'id_estacion_proveedor'
   names(temp_data)[names(temp_data) == 'Producto']        <- 'codigo_producto'
-  names(temp_data)[names(temp_data) == 'Total.Pago']      <- 'monto_pagado'
-  names(temp_data)[names(temp_data) == 'Volumen..L.' | (names(temp_data) == 'Volumen')]     <- 'litros'
+  names(temp_data)[names(temp_data) == 'Total.Pago' | names(temp_data) == 'Total Pago']      <- 'monto_pagado'
+  names(temp_data)[names(temp_data) == 'Volumen..L.' | (names(temp_data) == 'Volumen')  | (names(temp_data) == 'Volumen (L)')]     <- 'litros'
   names(temp_data)[(names(temp_data) == 'Fecha de transaccii?n') | (names(temp_data) == 'Fecha.Transacci?n') 
-                  | (names(temp_data) == 'Fecha.Transacci?') | (names(temp_data) == 'Fecha.Transaccion')] <- 'Fecha.Transaccion'
+                  | (names(temp_data) == 'Fecha.Transacción') | (names(temp_data) == 'Fecha.Transaccion') | 
+                    names(temp_data)=='Fecha Transacción'] <- 'fecha'
+
   
   esmax_corr <- c('trans_esmax_20210101.csv',
                   'trans_esmax_20210601.csv',
@@ -82,22 +81,29 @@ for (i in 1:length(archivos_esmax)) {
                   'trans_esmax_20220901.csv',
                   'Trans_esmax_20230701.csv'
                   )
-  
+
   if (archivos_esmax[i] %in% esmax_corr) {
-    temp_data$fecha <- as.Date(temp_data$Fecha.Transaccion, format = '%d-%m-%Y')
+    temp_data$fecha <- as.Date(temp_data$fecha, format = '%d-%m-%Y')
   } else {
-    temp_data$fecha <- as.Date(temp_data$Fecha.Transaccion, format = '%d/%m/%Y') 
-    }
+    temp_data$fecha <- as.Date(temp_data$fecha, format = '%d/%m/%Y')
+  }
   
-  temp_data <- temp_data %>% mutate(rut_organismo = substr(RUT,1,10))
+  temp_data <- as.data.frame(temp_data)
+  temp_data <- temp_data[,!duplicated(colnames(temp_data))]
+  
+  
+  temp_data <- temp_data %>% mutate(rut = substr(RUT,1,10))
   temp_data$monto_pagado <- as.numeric(gsub(',','.',gsub('.','',as.character(temp_data$monto_pagado), fixed = TRUE), fixed = TRUE))
-  temp_data$litros <- as.numeric(gsub(',','.',gsub('.','',as.character(temp_data$litros), fixed = TRUE), fixed = TRUE))
+  if (is.character(temp_data$litros)){
+    temp_data$litros <- as.numeric(gsub(',','.',gsub('.','',as.character(temp_data$litros), fixed = TRUE), fixed = TRUE))  
+  }
+  
   
   transacciones_esmax <- bind_rows(transacciones_esmax,
                                    temp_data %>% select(all_of(variables_necesarias)) %>% filter(codigo_producto != 'KEROSENE'))
 } 
 
-transacciones_copec$fecha <- lubridate::as_date(fecha)  
+#transacciones_copec$fecha <- lubridate::as_date(fecha)  
   
 # ========================================================= #
 # ========================================================= #

@@ -31,6 +31,7 @@ total_amount_cm <- monthly_transaction %>%
                               id_licitacion == "2239-10-LR21" ~ "Computadores",
                               id_licitacion == "2239-17-LR22" ~ "Computadores",
                               id_licitacion == "2239-17-LR20" ~ "Escritorio RM",
+                              id_licitacion == "2239-2-LR23" ~ "Escritorio RM",
                               id_licitacion == "2239-6-LR20" ~ "Combustible",
                               id_licitacion == "2239-7-LR17" ~ "Alimentos RM",
                               id_licitacion == "2239-13-LR21" ~ "Insumos Salud",

@@ -7,11 +7,11 @@ library(ggplot2)
 #setwd('C:/o/OneDrive - DCCP/Traspaso/2. Cálculo de Ahorro')
 
 # fecha de calculo
-anio_ahorro <- 2023
-mes_ahorro  <- 07
+anio_ahorro <- 2024
+mes_ahorro  <- 08
 fecha       <- paste0(anio_ahorro,ifelse(mes_ahorro<10,paste0(0,mes_ahorro),mes_ahorro),'01')
 
-source('./src/2.procesa_datos_combustible.R')
+source('./src/combustible/2.procesa_datos_combustible.R')
 
 tabla_precio_estacion <- readRDS(paste0('./data/combustible/precios por estacion/precios_por_estacion_',
                                         paste0(anio_ahorro,ifelse(mes_ahorro<10,paste0(0,mes_ahorro),mes_ahorro)),'.rds'))
@@ -36,8 +36,11 @@ ahorro_por_transaccion <- ahorro_por_transaccion %>%
   filter(between(precio_pagado,200,3000))
 
 # cobertura
-paste0('La cobertura obtenida corresponde a ',
-       round(sum(ahorro_por_transaccion$monto_pagado[!is.na(ahorro_por_transaccion$id_cne)])/sum(ahorro_por_transaccion$monto_pagado)*100,2),'%')
+print(
+  paste0('La cobertura obtenida corresponde a ',
+         round(sum(ahorro_por_transaccion$monto_pagado[!is.na(ahorro_por_transaccion$id_cne)])/sum(ahorro_por_transaccion$monto_pagado)*100,2),'%')  
+)
+
 
 
 ahorro_por_transaccion <- ahorro_por_transaccion  %>% 
@@ -76,12 +79,12 @@ ahorro_por_transaccion <- ahorro_por_transaccion  %>%
   )
 
 # ahorro general y cobertura del periodo
-paste0('El ahorro ponderado corresponde a ',round(weighted.mean(ahorro_por_transaccion$ahorro_item,ahorro_por_transaccion$MontoTotal_Item, na.rm = TRUE)*100,2),'%')
-paste0('El ahorro total del periodo corresponde a $',round(sum(ahorro_por_transaccion$monto_ahorro_item, na.rm = TRUE),0))
+message('El ahorro ponderado corresponde a ',round(weighted.mean(ahorro_por_transaccion$ahorro_item,ahorro_por_transaccion$MontoTotal_Item, na.rm = TRUE)*100,2),'%')
+message('El ahorro total del periodo corresponde a $',round(sum(ahorro_por_transaccion$monto_ahorro_item, na.rm = TRUE),0))
 
 writexl::write_xlsx(
   ahorro_por_transaccion %>% filter(year(FechaOC)==anio_ahorro & month(FechaOC)==mes_ahorro),
-  paste0('C:/Users/javier.guajardo/Documents/GitHub/eficiencia_nuevo_modelo_cm/savings_cm/output/weekly savings/ahorro_combustible_',
+  paste0('./output/weekly savings/ahorro_combustible_',
          substr(fecha,1,6),'.xlsx'))
 
 # distribucion

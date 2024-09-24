@@ -4,13 +4,14 @@
 library(dplyr)
 library(lubridate)
 library(ggplot2)
+library(RODBC)
 
 # ======================================================== #
 # parametros
 
 #report_date <- as.Date() # fecha del reporte
 #report_date <- floor_date(max(monthly_savings$FechaOC),'month')
-report_date <- '2024-03-01'
+#report_date <- '2024-03-01'
 mes_completo  <- TRUE # TRUE si el mes esta cerrado
 genera_dipres <- FALSE # TRUE si queremos generar el archivos a la dipres
 
@@ -49,7 +50,7 @@ monthly_savings$monto_total_item_usd  <- monthly_savings$MontoTotal_Item / month
 
 # podemos revisar el resultado a la fecha de consulta o el periodo completo
 
-if (mes_completo) 
+if (mes_completo)
 {#source('./ahorro/rfiles/savings test/extract_monthly_test.R')
  source('./src/monthly report/extract_monthly_backup.R')
   } else {
@@ -68,6 +69,7 @@ total_amount_cm <- bind_rows(total_amount_cm,
                              total_monitored_gas)
 
 summary_table <- merge(monthly_savings %>%
+                         #filter(es_80p_gen==1) %>% 
                          filter(year(fecha) == year(report_date) & month(fecha) == month(report_date) & ahorro_item < 0.8 & ahorro_item > -2) %>%
                          group_by(convenio) %>%
                          summarise(ahorro_promedio = weighted.mean(ahorro_item,monto_total_item),

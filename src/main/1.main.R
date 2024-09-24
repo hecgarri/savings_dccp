@@ -31,7 +31,7 @@ format_number <- function(x, digit,is_percent = FALSE) {
 
 # fecha de ejecucion
 #today <- Sys.Date()
-today         <- as.Date('2024-03-11') # fecha debe ser la de un lunes
+today         <- as.Date('2024-08-05') # fecha debe ser la de un lunes
 
 # generamos una medida de las diferencias de precios por proveedor
 # este es un proceso iterativo comenzando siempre desde 0.5 + y -
@@ -63,11 +63,12 @@ mutate(convenio = case_when(id_licitacion == '2239-7-LR17'  ~ 'Alimentos RM',
                             id_licitacion == '2239-5-LR19'  ~ 'Aseo',
                             id_licitacion == '2239-9-LR22'  ~ 'Aseo',
                             id_licitacion == '2239-17-LR20' ~ 'Escritorio RM',
+                            id_licitacion == '2239-2-LR23' ~ 'Escritorio RM',
                             id_licitacion == '2239-20-LR20' ~ 'Computadores',
                             id_licitacion == '2239-10-LR21' ~ 'Computadores',
                             id_licitacion == '2239-17-LR22' ~ 'Computadores',
-                            id_licitacion == '2239-2-LR18'  ~ 'Ferreteria',
                             id_licitacion == '2239-13-LR21' ~ 'Insumos Salud',
+                            id_licitacion == '2239-2-LR18'  ~ 'Ferreteria',
                             id_licitacion == '2239-13-LR23' ~ 'Ferretería',
                             TRUE ~ 'Otros')) %>%
   select(IDProductoCM,
@@ -91,6 +92,9 @@ mutate(convenio = case_when(id_licitacion == '2239-7-LR17'  ~ 'Alimentos RM',
          es_80p_gen
   )
 
+month_first_day <- as.Date('2024-07-01')
+month_last_day <- as.Date('2024-07-31')
+
 # monto de ahorro y cobertura por convenio
 savings_final <- savings %>%
   filter(ahorro_item > lim_inf & ahorro_item < lim_sup & between(FechaOC, month_first_day, month_last_day)) 
@@ -113,6 +117,7 @@ summary_table <- merge(savings_final %>%
                                                      id_licitacion == '2239-2-LR18'  ~ 'Ferreteria',
                                                      id_licitacion == '2239-13-LR21'  ~ 'Insumos Salud',
                                                      id_licitacion == '2239-13-LR23' ~ 'Ferretería',
+                                                     id_licitacion == '2239-2-LR23' ~ 'Escritorio RM',
                                                      TRUE ~ 'Otros')) %>%
                          group_by(convenio) %>% 
                          summarise(total_transado = sum(MontoTotal_Item)),

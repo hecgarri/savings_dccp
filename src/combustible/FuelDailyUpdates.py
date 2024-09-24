@@ -169,6 +169,7 @@ c93_df = data_frames['c93_df']  # Accede al DataFrame de Bencina 93
 c95_df = data_frames['c95_df']  # Accede al DataFrame de Bencina 95
 c97_df = data_frames['c97_df']  # Accede al DataFrame de Bencina 97
 c_diesel_df = data_frames['c_diesel_df']  # Accede al DataFrame de Diesel
+
 def cargar_y_modificar_aux(tabla_aux, datos):
     # Paso 1: Modificar la tabla auxiliar
     with engine.connect() as conn:
@@ -245,8 +246,8 @@ def insert_new_eds(table_aux, table_hist, table_ant):
         try:
             conn.execute(text(
                 f'''
-                INSERT INTO [Estudios].[dbo].{table_hist} (id, fecha_inicio, fecha_fin, precio, tipo)
-                SELECT a.id, a.fecha_inicio, a.fecha_fin, a.precio, a.tipo
+                INSERT INTO [Estudios].[dbo].{table_hist} (id, fecha_inicio, fecha_fin, precio, tipo, hora_actualizacion)
+                SELECT a.id, a.fecha_inicio, a.fecha_fin, a.precio, a.tipo, a.hora_actualizacion
                 FROM [Estudios].[dbo].{table_aux} AS a
                 LEFT JOIN [Estudios].[dbo].{table_ant} AS b
                 ON a.id = b.id
@@ -282,13 +283,14 @@ def update_hist(table_ant, table_hist, table_aux):
                 GROUP BY b.id
             )
 
-            INSERT INTO estudios.dbo.{table_hist} (id, fecha_inicio, fecha_fin, precio, tipo)
+            INSERT INTO estudios.dbo.{table_hist} (id, fecha_inicio, fecha_fin, precio, tipo, hora_actualizacion)
             SELECT 
                 a.id,
                 a.fecha_inicio,
                 a.fecha_fin,
                 a.precio,
-                a.tipo
+                a.tipo,
+                hora_actualizacion
             FROM estudios.dbo.{table_aux} AS a
             INNER JOIN temp b ON a.id = b.id
             WHERE a.fecha_inicio > b.fecha_inicio

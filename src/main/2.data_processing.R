@@ -79,35 +79,12 @@ summary_market_prices <- market_prices %>%
 
 print(summary_market_prices)
 
-# agregamos un case para la primera y ultima semana del mes
-# la idea es que no queden dias sueltos a inicio ni a fin de mes
-
-if (month(import_date) != month(import_date - days(7))) {
-  # inicio de mes
-  days_left <- days(import_date - month_first_day)
-  import_date <- month_first_day
-  is_first_week <- 1
-  
-} else {
-  is_first_week <- 0
-}
 
 
-if (month(import_date) != month(import_date + days(7))) {
-  # final de mes
-  days_left     <- days(month_last_day - import_date)
-  import_date   <- month_last_day
-  is_final_week <- 1
-  
-} else {
-  is_final_week <- 0
-}
-
-
-rm(list = c('download_day',
-            'week_last_day',
-            'summary_market_prices',
-            'files'))
+# rm(list = c('download_day',
+#             'week_last_day',
+#             'summary_market_prices',
+#             'files'))
 
 message('----------------------------------')
 message('----------------------------------')

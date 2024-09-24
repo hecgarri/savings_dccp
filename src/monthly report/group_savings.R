@@ -31,24 +31,37 @@ for (file in comb_files) {
   comb_monthly_savings   <- rbind(comb_monthly_savings,temp_data)
 }
 
-# convenio de gas
+
+# Convenio de gas
+first_gas <- readxl::read_xlsx(paste0("./output/weekly savings/", gas_files[1]))
+common_columns <- colnames(first_gas)
+
+for (file in gas_files[-1]){
+  temp_data <- readxl::read_xlsx(paste0("./output/weekly savings/", file))
+  common_columns <- intersect(common_columns, colnames(temp_data))
+}
+
 gas_monthly_savings <- data.frame()
 for (file in gas_files) {
-  temp_data <- readxl::read_xlsx(paste0("./output/weekly savings/",file))
-  temp_data$FechaOC <- as.Date(temp_data$FechaOC)
-  
-  #if (!file %in% c('ahorro_gas_202307.xlsx')) {
-  if (file %in% gas_files[1:16]) {
-    temp_data <- temp_data %>% select(-nombre_region,-n_cotizaciones) 
-  } else if (file %in% gas_files[19:length(gas_files)]) {
-    temp_data <- temp_data %>% select(-nombre_region,-idConvenioMarco) 
-  }
-  gas_monthly_savings   <- rbind(gas_monthly_savings,temp_data)
+  tryCatch({
+    temp_data <- readxl::read_xlsx(paste0("./output/weekly savings/", file))
+    temp_data$FechaOC <- as.Date(temp_data$FechaOC)
+    temp_data <- temp_data %>% select(all_of(common_columns))
+    gas_monthly_savings <- rbind(gas_monthly_savings, temp_data)
+  }, error = function(e) {
+    message(paste("Error in file:", file))
+    message(e)
+  })
 }
+
 
 gas_monthly_savings <- gas_monthly_savings %>%
   mutate(producto_rm = 1,
          es_80p_gen = 1)
+
+# monthly_savings_ini <- monthly_savings_ini %>%
+#   mutate(producto_rm = 1,
+#          es_80p_gen = 1)
 
 # unimos convenios generales mas combustibles
 monthly_savings <- bind_rows(monthly_savings_ini,
@@ -62,6 +75,10 @@ monthly_savings <- bind_rows(monthly_savings_ini,
 total_monitored_comb <- data.frame('convenio' = 'Combustible',
                                    'fecha' = report_date,
                                    'monto_transado' = sum(comb_monthly_savings$MontoTotal_Item))
+
+total_amount_cm <- monthly_savings_ini %>% 
+  group_by(convenio, fecha=floor_date(FechaOC,'month')) %>% 
+  summarise(monto_transado = sum(MontoTotal_Item, na.rm =TRUE))
 
 total_monitored_comb <- comb_monthly_savings %>%
   group_by(convenio,fecha = floor_date(FechaOC,'month')) %>%

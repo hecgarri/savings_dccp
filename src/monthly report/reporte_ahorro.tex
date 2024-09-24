@@ -1,0 +1,224 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{part title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{part title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\newif\ifbibliography
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{framed,color}
+\pgfdeclareimage[height=1cm, width=2.5cm]{logo}{ChileCompra.png}
+\logo{\pgfuseimage{logo}}
+\usepackage{wrapfig}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Resultados Mes 31},
+  pdfauthor={Dirección ChileCompra},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Resultados Mes 31}
+\subtitle{Nueva metodología de Ahorro en Convenio Marco}
+\author{Dirección ChileCompra}
+\date{2024-07-09}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}[fragile]
+\begin{verbatim}
+##        convenio ahorro_promedio productos total_ahorro cobertura_monto
+## 1           Gas      0.43455019        61   1226821583       94.347590
+## 2  Alimentos RM      0.19128074       502    924292701       59.866301
+## 3          Aseo      0.29678013        96    635391973       53.496232
+## 4 Insumos Salud      0.41319267        29    334352874        9.617997
+## 5  Computadores      0.27272712         3    285216764       43.290916
+## 6  Combustibles      0.03162037         4    128449862       71.160061
+## 7    Ferreteria      0.10836902        96    112918541       23.219391
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Contenido}
+\protect\hypertarget{contenido}{}
+\begin{itemize}
+\tightlist
+\item
+  Resultados de marzo 2024
+\end{itemize}
+
+\vspace{0.25cm}
+
+\begin{itemize}
+\tightlist
+\item
+  Comparación con meses previos
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Resultados del mes}
+\protect\hypertarget{resultados-del-mes}{}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+
+El ahorro total del mes asciende a: \textbf{\$4.094 millones de pesos}
+(USD 4,2 MM)
+
+\begin{table}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Convenio} & \textbf{Prod.Monitoreados} & \textbf{Ahorro Promedio(\%)} & \textbf{Ahorro (\$)} & \textbf{Cobertura*}\\
+\midrule
+Gas & 67 & 43,5\% & 1.226.821.583 & 100,0\%\\
+Alimentos RM & 953 & 18,8\% & 1.023.978.181 & 67,4\%\\
+Aseo & 415 & 28,4\% & 729.885.954 & 63,6\%\\
+Insumos Salud & 81 & 36,0\% & 391.981.683 & 13,0\%\\
+Computadores & 6 & 28,5\% & 355.184.205 & 50,1\%\\
+Ferreteria & 406 & 13,3\% & 237.463.550 & 37,9\%\\
+Combustibles & 4 & 3,2\% & 128.341.836 & 71,2\%\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\vspace{0.5cm}
+
+\footnotesize
+
+\textcolor{blue}{Total transado del mes} = \$23.214 millones de pesos
+(USD24 MM)
+
+\tiny
+
+*Considera todas las transacciones de los 8 convenios monitoreados.
+\center \footnotesize \textcolor{blue}{Cobertura agregada del mes} =
+56,8\%
+\end{frame}
+
+\begin{frame}{Comparación con meses previos}
+\protect\hypertarget{comparaciuxf3n-con-meses-previos}{}
+\begin{block}{Ahorro}
+\protect\hypertarget{ahorro}{}
+\footnotesize
+
+\includegraphics[width=0.98\linewidth,height=0.65\textheight]{reporte_ahorro_files/figure-beamer/unnamed-chunk-4-1}
+\end{block}
+\end{frame}
+
+\begin{frame}{Comparación con meses previos}
+\protect\hypertarget{comparaciuxf3n-con-meses-previos-1}{}
+\begin{block}{Cobertura}
+\protect\hypertarget{cobertura}{}
+\footnotesize
+
+\includegraphics[width=0.97\linewidth,height=0.6\textheight]{reporte_ahorro_files/figure-beamer/unnamed-chunk-5-1}
+\end{block}
+\end{frame}
+
+\begin{frame}{Notas}
+\protect\hypertarget{notas}{}
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Combustibles}: Se han actualizado las cifras desde el mes de
+  julio de 2023 en adelante.
+\item
+  \textbf{Gas}: Se actualizó el cálculo a partir de la misma fecha
+  utilizando precios históricos de call centers, repasando cifras
+  presentadas previamente construidas en base a estimaciones.
+\end{itemize}
+\end{frame}
+
+\end{document}

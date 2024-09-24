@@ -30,37 +30,67 @@ cerrar_conexion <- function(con) {
 # conexiones
 myconnAQ <- establecer_conexion("aq")
 
-# parametros
-if (is_final_week == 1) {
-  
-  extract_date_ini <- import_date - days(6) - days_left
-  extract_date_fin <- import_date   
-  
-} else if (is_first_week == 1) {
-  
-  extract_date_ini <- import_date 
-  extract_date_fin <- import_date + days_left
-  
-} else {
-  
-  extract_date_ini <- import_date - days(6)
-  extract_date_fin <- import_date
-}
+# agregamos un case para la primera y ultima semana del mes
+# la idea es que no queden dias sueltos a inicio ni a fin de mes
 
-#extract_date_ini <- '2022-02-01'
-
+# if (month(import_date) != month(import_date - days(7))) {
+#   # inicio de mes
+#   days_left <- days(import_date - month_first_day)
+#   import_date <- month_first_day
+#   is_first_week <- 1
+#   
+# } else {
+#   is_first_week <- 0
+# }
+# 
+# 
+# if (month(import_date) != month(import_date + days(7))) {
+#   # final de mes
+#   days_left     <- days(month_last_day - import_date)
+#   import_date   <- month_last_day
+#   is_final_week <- 1
+#   
+# } else {
+#   is_final_week <- 0
+# }
+# 
+# 
+# 
+# # parametros
+# if (is_final_week == 1) {
+#   
+#   extract_date_ini <- import_date - days(6) - days_left
+#   extract_date_fin <- import_date   
+#   
+# } else if (is_first_week == 1) {
+#   
+#   extract_date_ini <- import_date 
+#   extract_date_fin <- import_date + days_left
+#   
+# } else {
+#   
+#   extract_date_ini <- import_date - days(6)
+#   extract_date_fin <- import_date
+# }
+# 
+# #extract_date_ini <- '2022-02-01'
+# 
 # # acotamos las transacciones al mes del reporte
 # # inicio del mes
 # ini_week <- floor_date(import_date,'week', week_start = 1)
 # fin_week <- ceiling_date(import_date,'week', week_start = 0)
 # 
 # if (month(ini_week) != month(fin_week)) {
-#   
-#   extract_date_ini <- ceiling_date(ini_week,'month')
-#     
-# }
 # 
-# # fin del mes
+#   extract_date_ini <- ceiling_date(ini_week,'month')
+# 
+# }
+
+# fin del mes
+# 
+
+extract_date_ini = '2024-07-29'
+extract_date_fin = '2024-07-31'
 
 transaction_qry <- paste(
   "
@@ -145,12 +175,14 @@ WHERE
   AND porIsIntegrated = 2 
   AND porBuyerStatus in (4,5,6,7,12)
   AND cast(porSendDate as date) BETWEEN @FechaAnterior AND @FechaActual
-  AND IT.poiNroLicitacionPublica in ('2239-2-LR18',  -- Ferr
+  AND IT.poiNroLicitacionPublica in (
                                      '2239-17-LR20', -- Escr
+                                     '2239-2-LR23', -- Escr v2
                                      '2239-7-LR17',  -- Alim
                                      '2239-13-LR21', -- Insu
                                      '2239-5-LR19',  -- Aseo v1
                                      '2239-9-LR22',   -- Aseo v2
+                                     '2239-2-LR18',  -- Ferr
                                      '2239-13-LR23'   -- Ferr v4
                                      )
                              
@@ -160,6 +192,8 @@ WHERE
 )
 
 transaction <- dbGetQuery(myconnAQ,transaction_qry)
+
+transaction
 
 message('=============================')
 message(paste0('====> transacciones extraidas entre el ',extract_date_ini,' y el ',extract_date_fin))
@@ -171,7 +205,8 @@ transaction <- transaction %>%
     producto_rm = if_else(
       (id_licitacion == '2239-7-LR17' & str_detect(NombreProducto,' RM') & !str_detect(NombreProducto,'REGION')) |
         (id_licitacion == '2239-9-LR22' & str_detect(NombreProducto,' RM')) |
-        (id_licitacion == '2239-17-LR20' & str_detect(NombreProducto,'MACROZONA RM')) |
+        (id_licitacion == '2239-17-LR20' & str_detect(NombreProducto,'RM')) |
+        (id_licitacion == '2239-2-LR23' & str_detect(NombreProducto,'RM')) |
         (id_licitacion == '2239-13-LR21' & str_detect(NombreProducto,'CENTRO')) |
         (id_licitacion %in% c('2239-5-LR19','2239-20-LR20','2239-10-LR21','2239-17-LR22','2239-2-LR18','2239-13-LR23')),
       1,0)

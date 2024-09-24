@@ -1,5 +1,5 @@
 ---
-title: "Resultados Mes 30"
+title: "Resultados Mes 33"
 subtitle: "Nueva metodología de Ahorro en Convenio Marco"
 author: "Dirección ChileCompra"
 date: "`r Sys.Date()`"
@@ -31,14 +31,44 @@ library(ggplot2)
 library(lubridate)
 library(kableExtra)
 library(gridExtra)
+library(RODBC)
+library(DBI)
 
-report_date <- as.Date('2024-02-01')
+report_date <- as.Date('2024-07-01')
+
+#setwd("C:/o/DCCP/Javier Guajardo - Traspaso/2. Cálculo de Ahorro/savings_dccp")
                        
 ```
 
 ```{r}
 
-myconn <- RODBC::odbcConnect("DW_new", uid="datawarehouse" , pwd="datawarehouse")
+establecer_conexion <- function(opcion, database) {
+  switch(opcion,
+         "dw" = dbConnect(odbc::odbc(), 
+                          Driver = "ODBC Driver 17 for SQL Server", 
+                          Server = "10.34.71.202", 
+                          Database = database,
+                          UID = "datawarehouse", 
+                          PWD = "datawarehouse"),
+         "aq" = dbConnect(odbc::odbc(), 
+                          Driver = "ODBC Driver 17 for SQL Server", 
+                          Server = "10.34.71.146\\AQUILES_CONSULTA", 
+                          Database = database,
+                          UID = "datawarehouse", 
+                          PWD = "datawarehouse"),
+         # Agregar más casos según sea necesario
+         stop("Opción de conexión no válida.")
+  )
+}
+
+# Función para cerrar conexión
+cerrar_conexion <- function(con) {
+  dbDisconnect(con)
+}
+
+
+
+myconn <- RODBC::odbcConnect("dw", uid="datawarehouse" , pwd="datawarehouse")
 myconnDW <- RODBC::odbcConnect("Estudios DW", uid="datawarehouse" , pwd="datawarehouse")
 
 tipo_de_cambio <- RODBC::sqlQuery(myconn,
@@ -84,9 +114,9 @@ amount_cm_all <- data.frame('convenio' = c('Aseo','Computadores','Escritorio RM'
 total_amount_cm_sep <- 17668168263 # total transado en los 5 convenios (todas las regiones)
 
 # cargamos informacion historica
-source('C:/o/OneDrive - DCCP/Traspaso/2. Cálculo de Ahorro/src/monthly report/report_month.R')
+source('./src/monthly report/report_month.R')
 
-rm(list=c("Ahorro","dipres_file","summary_table"))
+rm(list=c("Ahorro","dipres_file"))
 
 ```
 
@@ -120,6 +150,7 @@ amount_cm_all <- total_amount_cm
 
 # tabla resumen
 summary_table <- merge(monthly_savings %>%
+                         #filter(es_80p_gen==1) %>% 
                          filter(floor_date(fecha,'month') <= report_date) %>%
                          group_by(convenio,fecha = floor_date(fecha,'month')) %>%
                          summarise(ahorro_promedio_formated = paste0(comma(weighted.mean(ahorro_item,monto_total_item,na.rm = TRUE)*
@@ -127,7 +158,7 @@ summary_table <- merge(monthly_savings %>%
                                    ahorro_promedio = weighted.mean(ahorro_item,monto_total_item,na.rm = TRUE),
                                    productos = n_distinct(id_producto),
                                    total_ahorro = sum(monto_ahorro_item,na.rm = TRUE),
-                                   total_monitoreado = sum(monto_total_item)),
+                                   total_monitoreado = sum(monto_total_item, na.rm = TRUE)),
                        total_amount_cm, #%>% select(-tipo_de_cambio),
                        by = c('fecha','convenio'),
                        all.x = TRUE)
@@ -137,15 +168,22 @@ summary_table$datekey <- stringr::str_remove_all(summary_table$fecha,"-")
 summary_table$cobertura <- summary_table$total_monitoreado / summary_table$monto_transado
 
 # cargamos los datos resumen en el servidor de estudios (202)
-RODBC::sqlQuery(myconnDW,("if OBJECT_ID('[Estudios].[dbo].[ahorro_mensual_cm]') is not null drop table [Estudios].[dbo].[ahorro_mensual_cm]"))
+# 
 
-RODBC::sqlSave(myconnDW,
-                 dat = summary_table %>% select(datekey,convenio,total_monitoreado,monto_transado,cobertura,total_ahorro,ahorro_promedio),
-                 tablename = "ahorro_mensual_cm",
-                 rownames = FALSE,
-                 fast = TRUE,
-                 append = TRUE
-  )
+# Ejemplo de uso
+con <- establecer_conexion("dw", "Estudios")
+
+# Ejecutar consulta para eliminar la tabla si existe
+dbExecute(con, "IF OBJECT_ID('[Estudios].[dbo].[ahorro_mensual_cm]') IS NOT NULL DROP TABLE [Estudios].[dbo].[ahorro_mensual_cm]")
+
+# Guardar el data frame en la base de datos
+dbWriteTable(con, "ahorro_mensual_cm", summary_table %>%
+               select(datekey, convenio, total_monitoreado, monto_transado, cobertura, total_ahorro, ahorro_promedio), row.names = FALSE, append = TRUE)
+
+
+# Realiza operaciones con la conexión 'con'
+cerrar_conexion(con)
+
 
 amount_cm_all$fecha <- as.Date(amount_cm_all$fecha)
 
@@ -319,8 +357,8 @@ serie_cobertura %>%
 
 ## Notas
 
-+ **Combustibles**: Estamos a la espera de la información proveniente de uno de los proveedores del convenio. Esta información se requiere para calcular el ahorro.
-+ **Gas**: Debido a la no disponibilidad de la API de la Comisión Nacional de Energía (CNE) se estuvo sin información durante 3 meses. En ese periodo se utilizó la información histórica mediante un modelo ARIMA para simular el precio para cada cilindro en cada una de las regiones disponibles. Con estos datos simulados se calcula el ahorro del convenio.
++ **Combustibles**: Se han actualizado las cifras desde el mes de julio de 2023 en adelante. 
++ **Gas**: Se actualizó el cálculo a partir de la misma fecha utilizando precios históricos de call centers, repasando cifras presentadas previamente construidas en base a estimaciones. 
 
 
 ```{r sobreprecio}
